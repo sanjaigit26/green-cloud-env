@@ -1,0 +1,208 @@
+# Sustainable Energy-Aware Cloud Scheduling Environment
+
+## Overview
+
+This project implements a real-world reinforcement learning environment for energy-aware cloud workload scheduling. It is designed to support Green AI by enabling intelligent decision-making that balances sustainability, cost efficiency, and performance.
+
+The environment simulates how an AI agent schedules compute jobs across multiple data center regions powered by different energy sources such as solar, wind, hydro, and fossil fuels.
+
+---
+
+## Problem Statement
+
+Modern cloud systems consume large amounts of energy, often relying on carbon-intensive sources. Current scheduling systems primarily focus on performance and cost, with little consideration for environmental impact.
+
+This environment addresses that gap by allowing AI agents to:
+
+* Minimize carbon emissions
+* Optimize energy costs
+* Respect renewable energy constraints
+* Meet job deadlines efficiently
+
+---
+
+## Environment Design
+
+### Regions
+
+* Multiple data center regions (e.g., us-east, eu-west, asia-south)
+* Each region has different energy mixes and compute capacities
+
+### Energy Sources
+
+Each energy source is defined by:
+
+* Carbon intensity
+* Cost per unit
+* Availability
+
+Examples:
+
+* Solar (low carbon, variable availability)
+* Wind (moderate variability)
+* Coal (high carbon, stable)
+
+---
+
+## Job Model
+
+Each compute job includes:
+
+* Compute requirement
+* Deadline
+* Assignment status
+
+---
+
+## Observation Space
+
+The agent observes the current system state:
+
+```json
+{
+  "time": int,
+  "jobs": [...],
+  "regions": [...],
+  "energy_sources": {...}
+}
+```
+
+---
+
+## Action Space
+
+```json
+{
+  "job_id": int,
+  "region": string,
+  "action_type": "assign"
+}
+```
+
+---
+
+## Reward Function
+
+The reward function is multi-objective and includes:
+
+* Lower carbon emissions increase reward
+* Lower energy cost increases reward
+* Meeting deadlines provides a bonus
+* Delays reduce reward
+
+Conceptually:
+
+Reward =
+0.5 × Carbon Efficiency
+
+* 0.3 × Cost Efficiency
+* 0.2 × Deadline Satisfaction
+
+---
+
+## Tasks
+
+### Easy
+
+Assign all jobs to any region
+
+### Medium
+
+Assign all jobs before their deadlines
+
+### Hard
+
+Optimize carbon emissions while meeting deadlines
+
+---
+
+## Grading System
+
+Each task is evaluated with a score between 0.0 and 1.0 based on:
+
+* Job completion rate
+* Deadline adherence
+* Carbon efficiency
+
+---
+
+## Baseline Inference
+
+A baseline agent assigns jobs sequentially and logs output in the required format:
+
+[START]
+[STEP]
+[END]
+
+---
+
+## Setup Instructions
+
+### Install dependencies
+
+```bash
+pip3 install pydantic fastapi uvicorn openenv-core openai
+```
+
+---
+
+### Run inference
+
+```bash
+python3 inference.py
+```
+
+---
+
+### Run API server
+
+```bash
+python3 -m server.app
+```
+
+---
+
+### Test endpoints
+
+* Reset: http://localhost:8000/reset
+* Step: POST /step
+
+---
+
+## Docker Usage
+
+```bash
+docker build -t green-env .
+docker run -p 8000:8000 green-env
+```
+
+---
+
+## OpenEnv Compliance
+
+* Implements step(), reset(), state()
+* Uses typed models (Pydantic)
+* Includes openenv.yaml
+* Passes openenv validation
+* Includes baseline inference script
+
+---
+
+## Project Value
+
+This environment enables experimentation with sustainable computing strategies and supports research in energy-aware scheduling and Green AI.
+
+---
+
+## Author
+
+Sanjai
+
+---
+
+## Future Improvements
+
+* Dynamic energy availability (time-based simulation)
+* Real-time pricing models
+* Multi-agent coordination
+* Carbon budget constraints

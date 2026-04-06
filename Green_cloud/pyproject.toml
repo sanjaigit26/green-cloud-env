@@ -1,0 +1,19 @@
+[project]
+name = "green-cloud-env"
+version = "0.1.0"
+description = "Sustainable Energy-Aware Cloud Scheduling Environment"
+authors = [
+    {name = "Sanjai"}
+]
+dependencies = [
+    "pydantic",
+    "openenv-core>=0.2.0",
+    "fastapi",
+    "uvicorn"
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.openenv]
+entry_point = "env:GreenCloudEnv"

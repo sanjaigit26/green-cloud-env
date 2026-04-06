@@ -1,0 +1,95 @@
+import random
+from typing import Dict
+
+from models import Observation, Action, StepResult, Job, Region, EnergySource
+from reward import calculate_reward  # ✅ NEW IMPORT
+
+
+class GreenCloudEnv:
+    def __init__(self):
+        self.time = 0
+        self.max_time = 10
+        self.jobs = []
+        self.regions = []
+        self.energy_sources: Dict[str, EnergySource] = {}
+
+    # 🔁 RESET ENVIRONMENT
+    def reset(self) -> Observation:
+        self.time = 0
+
+        # Initialize energy sources
+        self.energy_sources = {
+            "solar": EnergySource(name="solar", carbon_intensity=0.1, cost=2.0, availability=0.8),
+            "wind": EnergySource(name="wind", carbon_intensity=0.2, cost=1.5, availability=0.7),
+            "coal": EnergySource(name="coal", carbon_intensity=0.9, cost=1.0, availability=1.0),
+        }
+
+        # Initialize regions
+        self.regions = [
+            Region(name="us-east", capacity=100, energy_mix={"solar": 0.5, "coal": 0.5}),
+            Region(name="eu-west", capacity=80, energy_mix={"wind": 0.6, "coal": 0.4}),
+            Region(name="asia-south", capacity=120, energy_mix={"solar": 0.3, "wind": 0.3, "coal": 0.4}),
+        ]
+
+        # Initialize jobs
+        self.jobs = [
+            Job(id=1, compute_required=30, deadline=5),
+            Job(id=2, compute_required=40, deadline=7),
+            Job(id=3, compute_required=20, deadline=4),
+        ]
+
+        return self._get_observation()
+
+    # ⚙️ STEP FUNCTION
+    def step(self, action: Action) -> StepResult:
+        reward = 0.0
+        done = False
+
+        # Find job & region
+        job = next((j for j in self.jobs if j.id == action.job_id), None)
+        region = next((r for r in self.regions if r.name == action.region), None)
+
+        if not job or not region:
+            reward = 0.0  # invalid action
+        else:
+            if action.action_type == "assign" and not job.assigned:
+                job.assigned = True
+                job.assigned_region = region.name
+
+                # ✅ Use advanced reward function
+                reward = calculate_reward(
+                    job,
+                    region,
+                    self.energy_sources,
+                    self.time
+                )
+
+        # ⏱️ Time progression
+        self.time += 1
+
+        # 🛑 End condition
+        if self.time >= self.max_time or all(j.assigned for j in self.jobs):
+            done = True
+
+        return StepResult(
+            observation=self._get_observation(),
+            reward=max(min(reward, 1.0), 0.0),  # clamp 0–1
+            done=done,
+            info={}
+        )
+
+    # 📊 STATE (required for OpenEnv)
+    def state(self):
+        return {
+            "time": self.time,
+            "jobs": [j.dict() for j in self.jobs],
+        }
+
+    # 👀 OBSERVATION
+    def _get_observation(self) -> Observation:
+        return Observation(
+            time=self.time,
+            jobs=self.jobs,
+            regions=self.regions,
+            energy_sources=self.energy_sources
+        )

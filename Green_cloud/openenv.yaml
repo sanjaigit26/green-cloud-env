@@ -1,0 +1,47 @@
+id: green-cloud-scheduler
+name: Sustainable Energy-Aware Cloud Scheduling Environment
+
+description: >
+  A reinforcement learning environment where an AI agent schedules compute jobs
+  across multiple regions powered by different energy sources. The agent must
+  optimize for carbon emissions, cost efficiency, and job deadlines.
+
+entry_point: env:GreenCloudEnv
+
+observation_space:
+  type: object
+  properties:
+    time:
+      type: integer
+    jobs:
+      type: array
+    regions:
+      type: array
+    energy_sources:
+      type: object
+
+action_space:
+  type: object
+  properties:
+    job_id:
+      type: integer
+    region:
+      type: string
+    action_type:
+      type: string
+
+reward_range:
+  min: 0.0
+  max: 1.0
+
+max_steps: 10
+
+tasks:
+  - name: easy
+    description: Assign all jobs to any region
+
+  - name: medium
+    description: Assign all jobs before their deadlines
+
+  - name: hard
+    description: Optimize carbon emissions while meeting deadlines
