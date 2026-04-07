@@ -7,17 +7,18 @@ app = FastAPI()
 env = GreenCloudEnv()
 
 
-# ✅ Homepage (NEW)
+# ✅ Homepage
 @app.get("/")
 def home():
-    return {"status": "Green Cloud Env Running "}
+    return {"status": "ok"}
 
 
-# 🔁 Reset Endpoint
+# 🔁 Reset Endpoint (FIXED: supports GET + POST)
 @app.get("/reset")
+@app.post("/reset")
 def reset():
     obs = env.reset()
-    return obs.dict()
+    return obs.model_dump()
 
 
 # ⚙️ Step Endpoint
@@ -26,16 +27,16 @@ def step(action: dict):
     act = Action(**action)
     result = env.step(act)
     return {
-        "observation": result.observation.dict(),
+        "observation": result.observation.model_dump(),
         "reward": result.reward,
         "done": result.done,
         "info": result.info
     }
 
 
-# 🚀 Main Entry (REQUIRED)
+# 🚀 Main Entry
 def main():
-    uvicorn.run("server.app:app", host="0.0.0.0", port=8000)
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
 
 
 # 🔥 Entry Point
