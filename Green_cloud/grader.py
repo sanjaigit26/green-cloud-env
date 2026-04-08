@@ -2,8 +2,7 @@ def grade_easy(env):
     total_jobs = len(env.jobs)
     assigned_jobs = sum(1 for j in env.jobs if j.assigned)
 
-    score = assigned_jobs / total_jobs if total_jobs > 0 else 0.0
-    return round(score, 2)
+    return round(assigned_jobs / total_jobs if total_jobs > 0 else 0.0, 2)
 
 
 def grade_medium(env):
@@ -14,8 +13,7 @@ def grade_medium(env):
         if j.assigned and env.time <= j.deadline:
             success += 1
 
-    score = success / total_jobs if total_jobs > 0 else 0.0
-    return round(score, 2)
+    return round(success / total_jobs if total_jobs > 0 else 0.0, 2)
 
 
 def grade_hard(env):
@@ -40,16 +38,9 @@ def grade_hard(env):
         return 0.0
 
     completion_score = success / total_jobs
-
     avg_carbon = total_carbon / max(success, 1)
     carbon_score = 1 - avg_carbon
 
     final_score = (0.6 * completion_score) + (0.4 * carbon_score)
 
     return round(max(min(final_score, 1.0), 0.0), 2)
-
-GRADERS = {
-    "easy": grade_easy,
-    "medium": grade_medium,
-    "hard": grade_hard
-}
