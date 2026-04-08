@@ -36,12 +36,16 @@ reward_range:
 
 max_steps: 10
 
+# 🔥 FIXED SECTION
 tasks:
   - name: easy
     description: Assign all jobs to any region
+    grader: grader:grade_easy
 
   - name: medium
     description: Assign all jobs before their deadlines
+    grader: grader:grade_medium
 
   - name: hard
     description: Optimize carbon emissions while meeting deadlines
+    grader: grader:grade_hard
