@@ -1,5 +1,3 @@
-# tasks.py
-
 TASKS = {
     "easy": {
         "description": "Assign all jobs to any region",
