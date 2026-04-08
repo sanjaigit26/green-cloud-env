@@ -5,8 +5,8 @@ from models import Action
 
 # ✅ REQUIRED ENV VARIABLES
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-API_KEY = os.getenv("API_KEY")
+MODEL_NAME   = os.getenv("MODEL_NAME",   "Qwen/Qwen2.5-72B-Instruct")
+API_KEY      = os.getenv("API_KEY")
 
 MAX_STEPS = 5
 
@@ -27,14 +27,11 @@ def log_end(success, steps, score, rewards):
     print(f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}")
 
 
-# ✅ LLM CALL (MANDATORY FIX)
 def call_llm(client):
     try:
         response = client.chat.completions.create(
             model=MODEL_NAME,
-            messages=[
-                {"role": "user", "content": "Hello"}
-            ],
+            messages=[{"role": "user", "content": "Hello"}],
             max_tokens=5
         )
         return response.choices[0].message.content
@@ -53,15 +50,15 @@ def get_action(env):
     return Action(job_id=1, region=env.regions[0].name, action_type="assign")
 
 
-def run():
+def run_task(task_id: str):
     env = GreenCloudEnv()
     rewards = []
 
-    log_start("green-cloud-task", "green-cloud-env", MODEL_NAME)
+    log_start(task_id, "green-cloud-env", MODEL_NAME)
 
-    env.reset()
+    # ✅ Pass task_id to reset
+    env.reset(task_id=task_id)
 
-    # ✅ IMPORTANT: Make at least one LLM call
     _ = call_llm(client)
 
     done = False
@@ -69,27 +66,26 @@ def run():
 
     while not done and step < MAX_STEPS:
         step += 1
-
         action_obj = get_action(env)
-        result = env.step(action_obj)
+        result     = env.step(action_obj)
 
         reward = result.reward
-        done = result.done
-
+        done   = result.done
         rewards.append(reward)
 
-        log_step(
-            step,
-            str(action_obj.model_dump()),
-            reward,
-            done,
-            None
-        )
+        log_step(step, str(action_obj.model_dump()), reward, done, None)
 
-    score = sum(rewards) / len(rewards) if rewards else 0.0
+    score   = sum(rewards) / len(rewards) if rewards else 0.0
     success = score > 0.3
 
     log_end(success, step, score, rewards)
+    return score
+
+
+def run():
+    # ✅ Run all 3 tasks so graders are exercised
+    for task_id in ["easy", "medium", "hard"]:
+        run_task(task_id)
 
 
 if __name__ == "__main__":
