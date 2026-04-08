@@ -1,19 +1,16 @@
 def grade_easy(env):
     total_jobs = len(env.jobs)
     assigned_jobs = sum(1 for j in env.jobs if j.assigned)
-
-    return round(assigned_jobs / total_jobs if total_jobs > 0 else 0.0, 2)
+    return assigned_jobs / total_jobs if total_jobs > 0 else 0.0
 
 
 def grade_medium(env):
     total_jobs = len(env.jobs)
     success = 0
-
     for j in env.jobs:
         if j.assigned and env.time <= j.deadline:
             success += 1
-
-    return round(success / total_jobs if total_jobs > 0 else 0.0, 2)
+    return success / total_jobs if total_jobs > 0 else 0.0
 
 
 def grade_hard(env):
@@ -24,14 +21,11 @@ def grade_hard(env):
     for j in env.jobs:
         if j.assigned:
             success += 1
-
             region = next(r for r in env.regions if r.name == j.assigned_region)
-
             carbon = 0
             for source, ratio in region.energy_mix.items():
                 energy = env.energy_sources[source]
                 carbon += energy.carbon_intensity * ratio
-
             total_carbon += carbon
 
     if total_jobs == 0:
@@ -42,5 +36,4 @@ def grade_hard(env):
     carbon_score = 1 - avg_carbon
 
     final_score = (0.6 * completion_score) + (0.4 * carbon_score)
-
-    return round(max(min(final_score, 1.0), 0.0), 2)
+    return max(min(final_score, 1.0), 0.0)
