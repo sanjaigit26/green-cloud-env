@@ -37,3 +37,10 @@ def grade_hard(env):
 
     final_score = (0.6 * completion_score) + (0.4 * carbon_score)
     return max(min(final_score, 1.0), 0.0)
+
+
+GRADERS = {
+    "easy": grade_easy,
+    "medium": grade_medium,
+    "hard": grade_hard
+}
