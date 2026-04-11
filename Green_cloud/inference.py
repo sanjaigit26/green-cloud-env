@@ -3,14 +3,13 @@ from openai import OpenAI
 from env import GreenCloudEnv
 from models import Action
 
-# ✅ REQUIRED ENV VARIABLES
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME   = os.getenv("MODEL_NAME",   "Qwen/Qwen2.5-72B-Instruct")
-API_KEY      = os.getenv("API_KEY")
+HF_TOKEN     = os.getenv("HF_TOKEN")
 
 MAX_STEPS = 5
 
-client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
 
 def log_start(task, env, model):
@@ -22,9 +21,9 @@ def log_step(step, action, reward, done, error):
     print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error={error_val}")
 
 
-def log_end(success, steps, score, rewards):
+def log_end(success, steps, rewards):
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}")
+    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}")
 
 
 def call_llm(client):
@@ -56,7 +55,6 @@ def run_task(task_id: str):
 
     log_start(task_id, "green-cloud-env", MODEL_NAME)
 
-    # ✅ Pass task_id to reset
     env.reset(task_id=task_id)
 
     _ = call_llm(client)
@@ -67,23 +65,20 @@ def run_task(task_id: str):
     while not done and step < MAX_STEPS:
         step += 1
         action_obj = get_action(env)
-        result     = env.step(action_obj)
+        result = env.step(action_obj)
 
         reward = result.reward
-        done   = result.done
+        done = result.done
         rewards.append(reward)
 
         log_step(step, str(action_obj.model_dump()), reward, done, None)
 
-    score   = sum(rewards) / len(rewards) if rewards else 0.0
-    success = score > 0.3
+    success = sum(rewards) > 0
 
-    log_end(success, step, score, rewards)
-    return score
+    log_end(success, step, rewards)
 
 
 def run():
-    # ✅ Run all 3 tasks so graders are exercised
     for task_id in ["easy", "medium", "hard"]:
         run_task(task_id)
 
