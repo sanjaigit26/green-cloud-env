@@ -3,7 +3,7 @@ EPS = 1e-6  # much smaller buffer — keeps score well inside (0,1)
 def safe_score(score):
     if score <= 0.0:
         return EPS
-    if score >= 1.0:
+    if score <= 1.0:
         return 1.0 - EPS
     return float(score)
 
