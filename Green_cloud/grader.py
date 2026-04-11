@@ -1,64 +1,58 @@
-EPS = 1e-3  # small buffer
+EPS = 1e-6  # much smaller buffer — keeps score well inside (0,1)
 
 def safe_score(score):
-    # force strictly inside (0,1)
     if score <= 0.0:
-        return 0.0 + EPS
+        return EPS
     if score >= 1.0:
         return 1.0 - EPS
-    return score
+    return float(score)
 
 def grade_easy(env):
     total_jobs = len(env.jobs)
+    if total_jobs == 0:
+        return EPS
     assigned_jobs = sum(1 for j in env.jobs if j.assigned)
-
-    score = assigned_jobs / total_jobs if total_jobs > 0 else 0.0
+    score = assigned_jobs / total_jobs
     return safe_score(score)
 
 def grade_medium(env):
     total_jobs = len(env.jobs)
-    success = 0
-
-    for j in env.jobs:
-        if j.assigned and env.time <= j.deadline:
-            success += 1
-
-    score = success / total_jobs if total_jobs > 0 else 0.0
+    if total_jobs == 0:
+        return EPS
+    success = sum(
+        1 for j in env.jobs
+        if j.assigned and env.time <= j.deadline
+    )
+    score = success / total_jobs
     return safe_score(score)
 
 def grade_hard(env):
     total_jobs = len(env.jobs)
+    if total_jobs == 0:
+        return EPS
+
     success = 0
-    total_carbon = 0
+    total_carbon = 0.0
 
     for j in env.jobs:
         if j.assigned:
             success += 1
             region = next(r for r in env.regions if r.name == j.assigned_region)
-
-            carbon = 0
-            for source, ratio in region.energy_mix.items():
-                energy = env.energy_sources[source]
-                carbon += energy.carbon_intensity * ratio
-
+            carbon = sum(
+                env.energy_sources[source].carbon_intensity * ratio
+                for source, ratio in region.energy_mix.items()
+            )
             total_carbon += carbon
-
-    if total_jobs == 0:
-        return EPS  # ✅ FIX 1: was "return 0.0 + EPS" which is fine, but let's be consistent
 
     completion_score = success / total_jobs
     avg_carbon = total_carbon / max(success, 1)
-
-    # ✅ FIX 2: clamp carbon_score to [0,1] before blending,
-    # because avg_carbon can exceed 1.0 making carbon_score negative
-    carbon_score = max(0.0, min(1.0, 1 - avg_carbon))
+    carbon_score = max(0.0, min(1.0, 1.0 - avg_carbon))
 
     final_score = (0.6 * completion_score) + (0.4 * carbon_score)
-
-    return safe_score(final_score)  # ✅ FIX 3: safe_score always applied last
+    return safe_score(final_score)
 
 GRADERS = {
-    "easy": grade_easy,
+    "easy":   grade_easy,
     "medium": grade_medium,
-    "hard": grade_hard
+    "hard":   grade_hard,
 }
