@@ -1,25 +1,33 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Optional
 from env import GreenCloudEnv
 from models import Action
+from grader import GRADERS
 import uvicorn
 
 app = FastAPI()
 env = GreenCloudEnv()
 
+class ResetRequest(BaseModel):
+    task_id: Optional[str] = "easy"
 
 # ✅ Homepage
 @app.get("/")
 def home():
     return {"status": "ok"}
 
-
-# 🔁 Reset Endpoint (FIXED: supports GET + POST)
+# 🔁 Reset - supports GET (query param) and POST (JSON body)
 @app.get("/reset")
-@app.post("/reset")
-def reset():
-    obs = env.reset()
+def reset_get(task_id: str = "easy"):
+    obs = env.reset(task_id=task_id)
     return obs.model_dump()
 
+@app.post("/reset")
+def reset_post(body: ResetRequest = None):
+    task_id = body.task_id if body else "easy"
+    obs = env.reset(task_id=task_id)
+    return obs.model_dump()
 
 # ⚙️ Step Endpoint
 @app.post("/step")
@@ -33,12 +41,19 @@ def step(action: dict):
         "info": result.info
     }
 
+# 📊 Grade Endpoint - THIS WAS MISSING
+@app.get("/grade")
+@app.post("/grade")
+def grade():
+    scores = {}
+    for task_name, grader_fn in GRADERS.items():
+        env.reset(task_id=task_name)
+        scores[task_name] = grader_fn(env)
+    return scores
 
 # 🚀 Main Entry
 def main():
     uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
 
-
-# 🔥 Entry Point
 if __name__ == "__main__":
     main()
