@@ -40,10 +40,10 @@ class GreenCloudEnv:
             Job(id=2, compute_required=40, deadline=7),
             Job(id=3, compute_required=20, deadline=4),
         ]
-        return self._get_observation(reward=None, done=False)
+        return self._get_observation()
 
     def step(self, action: Action) -> StepResult:
-        reward = clamp(0.5)  # neutral default
+        reward = clamp(0.5)
         done = False
 
         job    = next((j for j in self.jobs    if j.id   == action.job_id), None)
@@ -62,9 +62,12 @@ class GreenCloudEnv:
         if done:
             reward = clamp(self.current_task["grader"](self))
 
-        obs = self._get_observation(reward=reward, done=done)
-        return StepResult(observation=obs, reward=reward, done=done,
-                          info={"task_id": self.current_task_id})
+        return StepResult(
+            observation=self._get_observation(),
+            reward=reward,
+            done=done,
+            info={"task_id": self.current_task_id}
+        )
 
     def state(self):
         return {
@@ -73,12 +76,10 @@ class GreenCloudEnv:
             "jobs": [j.dict() for j in self.jobs],
         }
 
-    def _get_observation(self, reward=None, done=False) -> Observation:
+    def _get_observation(self) -> Observation:
         return Observation(
             time=self.time,
             jobs=self.jobs,
             regions=self.regions,
-            energy_sources=self.energy_sources,
-            done=done,
-            reward=reward,  # ✅ always included now
+            energy_sources=self.energy_sources
         )
