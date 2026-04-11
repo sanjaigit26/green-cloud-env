@@ -30,9 +30,6 @@ def run_and_grade(task_name: str) -> float:
 class ResetRequest(BaseModel):
     task_id: Optional[str] = "easy"
 
-class GradeRequest(BaseModel):
-    task_id: Optional[str] = None
-
 @app.get("/")
 def home():
     return {"status": "ok"}
@@ -60,17 +57,13 @@ def step(action: dict):
     }
 
 @app.get("/grade")
-def grade_get(task_id: Optional[str] = None):
-    if task_id and task_id in GRADERS:
-        return {"task_id": task_id, "score": run_and_grade(task_id)}
-    return {name: run_and_grade(name) for name in GRADERS}
-
 @app.post("/grade")
-def grade_post(body: GradeRequest = None):
-    task_id = body.task_id if body else None
-    if task_id and task_id in GRADERS:
-        return {"task_id": task_id, "score": run_and_grade(task_id)}
-    return {name: run_and_grade(name) for name in GRADERS}
+def grade():
+    return {
+        "easy":   run_and_grade("easy"),
+        "medium": run_and_grade("medium"),
+        "hard":   run_and_grade("hard")
+    }
 
 def main():
     uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
