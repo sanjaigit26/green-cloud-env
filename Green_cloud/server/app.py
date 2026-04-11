@@ -9,15 +9,34 @@ import uvicorn
 app = FastAPI()
 env = GreenCloudEnv()
 
+EPS = 1e-4
+
+def clamp(value: float) -> float:
+    return max(EPS, min(1.0 - EPS, float(value)))
+
+def run_and_grade(task_name: str) -> float:
+    env.reset(task_id=task_name)
+    for job in env.jobs:
+        best_region = min(
+            env.regions,
+            key=lambda r: sum(
+                env.energy_sources[s].carbon_intensity * ratio
+                for s, ratio in r.energy_mix.items()
+            )
+        )
+        env.step(Action(job_id=job.id, region=best_region.name, action_type="assign"))
+    return clamp(GRADERS[task_name](env))
+
 class ResetRequest(BaseModel):
     task_id: Optional[str] = "easy"
 
-# ✅ Homepage
+class GradeRequest(BaseModel):
+    task_id: Optional[str] = None
+
 @app.get("/")
 def home():
     return {"status": "ok"}
 
-# 🔁 Reset - supports GET (query param) and POST (JSON body)
 @app.get("/reset")
 def reset_get(task_id: str = "easy"):
     obs = env.reset(task_id=task_id)
@@ -29,7 +48,6 @@ def reset_post(body: ResetRequest = None):
     obs = env.reset(task_id=task_id)
     return obs.model_dump()
 
-# ⚙️ Step Endpoint
 @app.post("/step")
 def step(action: dict):
     act = Action(**action)
@@ -41,35 +59,19 @@ def step(action: dict):
         "info": result.info
     }
 
-# 📊 Grade Endpoint
 @app.get("/grade")
+def grade_get(task_id: Optional[str] = None):
+    if task_id and task_id in GRADERS:
+        return {"task_id": task_id, "score": run_and_grade(task_id)}
+    return {name: run_and_grade(name) for name in GRADERS}
+
 @app.post("/grade")
-def grade():
-    scores = {}
-    for task_name, grader_fn in GRADERS.items():
-        # Reset env for this task
-        env.reset(task_id=task_name)
+def grade_post(body: GradeRequest = None):
+    task_id = body.task_id if body else None
+    if task_id and task_id in GRADERS:
+        return {"task_id": task_id, "score": run_and_grade(task_id)}
+    return {name: run_and_grade(name) for name in GRADERS}
 
-        # ✅ Auto-assign all jobs to lowest-carbon region before grading
-        for job in env.jobs:
-            best_region = min(
-                env.regions,
-                key=lambda r: sum(
-                    env.energy_sources[s].carbon_intensity * ratio
-                    for s, ratio in r.energy_mix.items()
-                )
-            )
-            env.step(Action(
-                job_id=job.id,
-                region=best_region.name,
-                action_type="assign"
-            ))
-
-        scores[task_name] = grader_fn(env)
-
-    return scores
-
-# 🚀 Main Entry
 def main():
     uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
 
