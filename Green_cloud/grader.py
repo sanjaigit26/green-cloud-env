@@ -1,6 +1,5 @@
 EPS = 1e-3  # small buffer
 
-
 def safe_score(score):
     # force strictly inside (0,1)
     if score <= 0.0:
@@ -9,14 +8,12 @@ def safe_score(score):
         return 1.0 - EPS
     return score
 
-
 def grade_easy(env):
     total_jobs = len(env.jobs)
     assigned_jobs = sum(1 for j in env.jobs if j.assigned)
 
     score = assigned_jobs / total_jobs if total_jobs > 0 else 0.0
     return safe_score(score)
-
 
 def grade_medium(env):
     total_jobs = len(env.jobs)
@@ -28,7 +25,6 @@ def grade_medium(env):
 
     score = success / total_jobs if total_jobs > 0 else 0.0
     return safe_score(score)
-
 
 def grade_hard(env):
     total_jobs = len(env.jobs)
@@ -48,16 +44,18 @@ def grade_hard(env):
             total_carbon += carbon
 
     if total_jobs == 0:
-        return 0.0 + EPS
+        return EPS  # ✅ FIX 1: was "return 0.0 + EPS" which is fine, but let's be consistent
 
     completion_score = success / total_jobs
     avg_carbon = total_carbon / max(success, 1)
-    carbon_score = 1 - avg_carbon
+
+    # ✅ FIX 2: clamp carbon_score to [0,1] before blending,
+    # because avg_carbon can exceed 1.0 making carbon_score negative
+    carbon_score = max(0.0, min(1.0, 1 - avg_carbon))
 
     final_score = (0.6 * completion_score) + (0.4 * carbon_score)
 
-    return safe_score(final_score)
-
+    return safe_score(final_score)  # ✅ FIX 3: safe_score always applied last
 
 GRADERS = {
     "easy": grade_easy,
