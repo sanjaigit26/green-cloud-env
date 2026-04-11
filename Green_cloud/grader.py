@@ -1,8 +1,12 @@
-def clamp(score):
+EPS = 1e-3  # small buffer
+
+
+def safe_score(score):
+    # force strictly inside (0,1)
     if score <= 0.0:
-        return 0.01
+        return 0.0 + EPS
     if score >= 1.0:
-        return 0.99
+        return 1.0 - EPS
     return score
 
 
@@ -11,8 +15,7 @@ def grade_easy(env):
     assigned_jobs = sum(1 for j in env.jobs if j.assigned)
 
     score = assigned_jobs / total_jobs if total_jobs > 0 else 0.0
-    score = round(score, 2)
-    return clamp(score)
+    return safe_score(score)
 
 
 def grade_medium(env):
@@ -24,8 +27,7 @@ def grade_medium(env):
             success += 1
 
     score = success / total_jobs if total_jobs > 0 else 0.0
-    score = round(score, 2)
-    return clamp(score)
+    return safe_score(score)
 
 
 def grade_hard(env):
@@ -46,16 +48,15 @@ def grade_hard(env):
             total_carbon += carbon
 
     if total_jobs == 0:
-        return 0.01
+        return 0.0 + EPS
 
     completion_score = success / total_jobs
     avg_carbon = total_carbon / max(success, 1)
     carbon_score = 1 - avg_carbon
 
     final_score = (0.6 * completion_score) + (0.4 * carbon_score)
-    final_score = round(final_score, 2)
 
-    return clamp(final_score)
+    return safe_score(final_score)
 
 
 GRADERS = {
