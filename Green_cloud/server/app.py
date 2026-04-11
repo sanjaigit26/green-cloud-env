@@ -41,14 +41,32 @@ def step(action: dict):
         "info": result.info
     }
 
-# 📊 Grade Endpoint - THIS WAS MISSING
+# 📊 Grade Endpoint
 @app.get("/grade")
 @app.post("/grade")
 def grade():
     scores = {}
     for task_name, grader_fn in GRADERS.items():
+        # Reset env for this task
         env.reset(task_id=task_name)
+
+        # ✅ Auto-assign all jobs to lowest-carbon region before grading
+        for job in env.jobs:
+            best_region = min(
+                env.regions,
+                key=lambda r: sum(
+                    env.energy_sources[s].carbon_intensity * ratio
+                    for s, ratio in r.energy_mix.items()
+                )
+            )
+            env.step(Action(
+                job_id=job.id,
+                region=best_region.name,
+                action_type="assign"
+            ))
+
         scores[task_name] = grader_fn(env)
+
     return scores
 
 # 🚀 Main Entry
