@@ -3,14 +3,14 @@ from typing import List, Dict, Optional
 
 class EnergySource(BaseModel):
     name: str
-    carbon_intensity: float   
-    cost: float              
-    availability: float    
+    carbon_intensity: float
+    cost: float
+    availability: float
 
 class Region(BaseModel):
     name: str
     capacity: int
-    energy_mix: Dict[str, float]  
+    energy_mix: Dict[str, float]
 
 class Job(BaseModel):
     id: int
@@ -24,11 +24,13 @@ class Observation(BaseModel):
     jobs: List[Job]
     regions: List[Region]
     energy_sources: Dict[str, EnergySource]
+    done: bool = False
+    reward: Optional[float] = None   # ✅ validator reads this field
 
 class Action(BaseModel):
     job_id: int
     region: str
-    action_type: str 
+    action_type: str
 
 class StepResult(BaseModel):
     observation: Observation
