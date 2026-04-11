@@ -25,7 +25,7 @@ class Observation(BaseModel):
     regions: List[Region]
     energy_sources: Dict[str, EnergySource]
     done: bool = False
-    reward: Optional[float] = None   # ✅ validator reads this field
+    reward: float = 0.5  # ✅ never null
 
 class Action(BaseModel):
     job_id: int
