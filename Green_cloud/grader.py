@@ -8,10 +8,14 @@ def _safe(value: float) -> float:
     if not isfinite(x):
         return 0.5
     if x <= 0.0:
-        return 0.01
+        return 0.2
     if x >= 1.0:
-        return 0.99
-    return x
+        return 0.8
+    if x < 0.2:
+        return 0.2
+    if x > 0.8:
+        return 0.8
+    return round(x, 4)
 
 def easy(env=None, observation=None, **kwargs) -> float:
     try:
@@ -21,7 +25,8 @@ def easy(env=None, observation=None, **kwargs) -> float:
         if total_jobs <= 0:
             return 0.5
         assigned = sum(1 for j in jobs if getattr(j, "assigned", False))
-        return _safe(assigned / total_jobs)
+        raw = assigned / total_jobs
+        return _safe(0.2 + raw * 0.6)
     except Exception:
         return 0.5
 
@@ -38,7 +43,8 @@ def medium(env=None, observation=None, **kwargs) -> float:
             if getattr(j, "assigned", False)
             and current_time <= getattr(j, "deadline", current_time)
         )
-        return _safe(success / total_jobs)
+        raw = success / total_jobs
+        return _safe(0.2 + raw * 0.6)
     except Exception:
         return 0.5
 
@@ -74,14 +80,13 @@ def hard(env=None, observation=None, **kwargs) -> float:
                 carbon += getattr(source, "carbon_intensity", 0.0) * float(ratio)
             success_count += 1
             total_carbon += carbon
-        completion_score = _safe(success_count / total_jobs)
+        completion = _safe(0.2 + (success_count / total_jobs) * 0.6)
         if success_count == 0:
-            carbon_score = 0.5
+            carbon = 0.5
         else:
             avg_carbon = total_carbon / success_count
-            carbon_score = _safe(1.0 - avg_carbon)
-        weighted = 0.6 * completion_score + 0.4 * carbon_score
-        return _safe(weighted)
+            carbon = _safe(0.2 + (1.0 - avg_carbon) * 0.6)
+        return _safe(0.6 * completion + 0.4 * carbon)
     except Exception:
         return 0.5
 
