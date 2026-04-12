@@ -1,7 +1,7 @@
 EPS = 0.1
 
 def safe_score(score: float) -> float:
-    return max(0.1, min(0.9, float(score)))  # strictly inside (0,1) with big margin
+    return max(0.1, min(0.9, float(score)))
 
 def grade_easy(env) -> float:
     total_jobs = len(env.jobs)
@@ -9,9 +9,7 @@ def grade_easy(env) -> float:
         return 0.1
     assigned = sum(1 for j in env.jobs if j.assigned)
     raw = assigned / total_jobs
-    # Map 0→0.1, 1→0.9
-    mapped = 0.1 + (raw * 0.8)
-    return round(mapped, 6)
+    return round(0.1 + (raw * 0.8), 6)
 
 def grade_medium(env) -> float:
     total_jobs = len(env.jobs)
@@ -22,8 +20,7 @@ def grade_medium(env) -> float:
         if j.assigned and env.time <= j.deadline
     )
     raw = success / total_jobs
-    mapped = 0.1 + (raw * 0.8)
-    return round(mapped, 6)
+    return round(0.1 + (raw * 0.8), 6)
 
 def grade_hard(env) -> float:
     total_jobs = len(env.jobs)
@@ -44,12 +41,14 @@ def grade_hard(env) -> float:
     avg_carbon = total_carbon / max(success, 1)
     carbon_score = max(0.0, min(1.0, 1.0 - avg_carbon))
     final_score = (0.6 * completion_score) + (0.4 * carbon_score)
-    # Map 0→0.1, 1→0.9
-    mapped = 0.1 + (final_score * 0.8)
-    return round(mapped, 6)
+    return round(0.1 + (final_score * 0.8), 6)
 
 GRADERS = {
     "easy":   grade_easy,
     "medium": grade_medium,
     "hard":   grade_hard,
 }
+
+easy = grade_easy
+medium = grade_medium
+hard = grade_hard
