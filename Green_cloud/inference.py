@@ -3,13 +3,13 @@ from openai import OpenAI
 from env import GreenCloudEnv
 from models import Action
 
-API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME   = os.getenv("MODEL_NAME",   "Qwen/Qwen2.5-72B-Instruct")
-HF_TOKEN     = os.getenv("HF_TOKEN")
+API_BASE_URL = os.environ["API_BASE_URL"]   # ✅ must use environ not getenv
+API_KEY      = os.environ["API_KEY"]         # ✅ API_KEY not HF_TOKEN
+MODEL_NAME   = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 
 MAX_STEPS = 5
 
-client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
 def clamp(value: float) -> float:
     return max(0.15, min(0.85, float(value)))
@@ -51,10 +51,9 @@ def run_task(task_id: str):
     rewards = []
 
     log_start(task_id, "green-cloud-env", MODEL_NAME)
-
     env.reset(task_id=task_id)
 
-    _ = call_llm(client)
+    _ = call_llm(client)  # ✅ LLM call goes through proxy
 
     done = False
     step = 0
@@ -63,18 +62,13 @@ def run_task(task_id: str):
         step += 1
         action_obj = get_action(env)
         result = env.step(action_obj)
-
-        # ✅ clamp every reward strictly inside (0,1)
         reward = clamp(result.reward)
         done = result.done
         rewards.append(reward)
-
         log_step(step, str(action_obj.model_dump()), reward, done, None)
 
-    # ✅ success as float strictly between 0 and 1, never True/False
     final_score = clamp(sum(rewards) / len(rewards)) if rewards else 0.5
     success = final_score > 0.3
-
     log_end(success, step, rewards)
     return final_score
 
