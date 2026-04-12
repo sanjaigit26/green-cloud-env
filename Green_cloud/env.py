@@ -2,9 +2,7 @@ from typing import Dict
 from models import Observation, Action, StepResult, Job, Region, EnergySource
 from reward import calculate_reward
 from tasks import TASKS
-
-def clamp(value: float) -> float:
-    return max(0.1, min(0.9, float(value)))
+from grader import GRADERS  # Keep this
 
 class GreenCloudEnv:
     def __init__(self):
@@ -37,19 +35,23 @@ class GreenCloudEnv:
             Job(id=2, compute_required=40, deadline=7),
             Job(id=3, compute_required=20, deadline=4),
         ]
+        # Reset all jobs to unassigned
+        for job in self.jobs:
+            job.assigned = False
+            job.assigned_region = None
         return self._get_observation(reward=0.5, done=False)
 
     def step(self, action: Action) -> StepResult:
         reward = 0.5
         done = False
 
-        job    = next((j for j in self.jobs    if j.id   == action.job_id), None)
-        region = next((r for r in self.regions if r.name == action.region),  None)
+        job = next((j for j in self.jobs if j.id == action.job_id), None)
+        region = next((r for r in self.regions if r.name == action.region), None)
 
         if job and region and action.action_type == "assign" and not job.assigned:
             job.assigned = True
             job.assigned_region = region.name
-            reward = clamp(calculate_reward(job, region, self.energy_sources, self.time))
+            reward = calculate_reward(job, region, self.energy_sources, self.time)
 
         self.time += 1
 
@@ -57,7 +59,9 @@ class GreenCloudEnv:
             done = True
 
         if done:
-            reward = clamp(self.current_task["grader"](self))
+            grader = GRADERS.get(self.current_task_id)
+            if grader:
+                reward = grader(self)
 
         return StepResult(
             observation=self._get_observation(reward=reward, done=done),
