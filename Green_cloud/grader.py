@@ -92,6 +92,5 @@ def hard(env=None, observation=None, **kwargs) -> float:
 
 GRADERS = {
     "easy":   easy,
-    "medium": medium,
     "hard":   hard,
 }
