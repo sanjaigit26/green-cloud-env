@@ -3,10 +3,8 @@ from models import Observation, Action, StepResult, Job, Region, EnergySource
 from reward import calculate_reward
 from tasks import TASKS
 
-EPS = 1e-4
-
 def clamp(value: float) -> float:
-    return max(EPS, min(1.0 - EPS, float(value)))
+    return max(0.1, min(0.9, float(value)))
 
 class GreenCloudEnv:
     def __init__(self):
@@ -39,10 +37,10 @@ class GreenCloudEnv:
             Job(id=2, compute_required=40, deadline=7),
             Job(id=3, compute_required=20, deadline=4),
         ]
-        return self._get_observation()
+        return self._get_observation(reward=0.5, done=False)
 
     def step(self, action: Action) -> StepResult:
-        reward = clamp(0.5)  # ✅ never 0.0
+        reward = 0.5
         done = False
 
         job    = next((j for j in self.jobs    if j.id   == action.job_id), None)
@@ -62,8 +60,8 @@ class GreenCloudEnv:
             reward = clamp(self.current_task["grader"](self))
 
         return StepResult(
-            observation=self._get_observation(),
-            reward=reward,  # ✅ always clamped
+            observation=self._get_observation(reward=reward, done=done),
+            reward=reward,
             done=done,
             info={"task_id": self.current_task_id}
         )
@@ -75,10 +73,12 @@ class GreenCloudEnv:
             "jobs": [j.dict() for j in self.jobs],
         }
 
-    def _get_observation(self) -> Observation:
+    def _get_observation(self, reward: float = 0.5, done: bool = False) -> Observation:
         return Observation(
             time=self.time,
             jobs=self.jobs,
             regions=self.regions,
-            energy_sources=self.energy_sources
+            energy_sources=self.energy_sources,
+            reward=reward,
+            done=done
         )
