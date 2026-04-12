@@ -3,8 +3,8 @@ from openai import OpenAI
 from env import GreenCloudEnv
 from models import Action
 
-API_BASE_URL = os.environ["API_BASE_URL"]   # ✅ must use environ not getenv
-API_KEY      = os.environ["API_KEY"]         # ✅ API_KEY not HF_TOKEN
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+API_KEY      = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
 MODEL_NAME   = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 
 MAX_STEPS = 5
@@ -53,7 +53,7 @@ def run_task(task_id: str):
     log_start(task_id, "green-cloud-env", MODEL_NAME)
     env.reset(task_id=task_id)
 
-    _ = call_llm(client)  # ✅ LLM call goes through proxy
+    _ = call_llm(client)
 
     done = False
     step = 0
