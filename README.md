@@ -130,8 +130,8 @@ Reward =
 
 Using the provided baseline agent:
 
-* Easy: 1.0
-* Medium: 1.0
+* Easy: 0.99
+* Medium: 0.99
 * Hard: 0.81
 
 These scores demonstrate increasing difficulty and realistic constraints.
