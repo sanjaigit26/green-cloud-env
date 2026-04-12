@@ -4,7 +4,7 @@ from reward import calculate_reward
 from tasks import TASKS
 
 def clamp(value: float) -> float:
-    return max(0.1, min(0.9, float(value)))
+    return max(0.15, min(0.85, float(value)))  # ✅ tighter bounds
 
 class GreenCloudEnv:
     def __init__(self):
