@@ -29,18 +29,18 @@ action_space:
       type: string
 
 reward_range:
-  min: 0.5
-  max: 0.5
+  min: 0.21
+  max: 0.79
 
 max_steps: 10
 
 tasks:
   - name: easy
     description: Assign all jobs to any region
-    grader: easy
+    grader: server.graders:EasyGrader
   - name: medium
     description: Assign all jobs before their deadlines
-    grader: medium
+    grader: server.graders:MediumGrader
   - name: hard
     description: Optimize carbon emissions while meeting deadlines
-    grader: hard
+    grader: server.graders:HardGrader
