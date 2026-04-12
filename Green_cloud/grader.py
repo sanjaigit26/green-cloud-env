@@ -1,15 +1,12 @@
-EPS = 0.1
-
-def safe_score(score: float) -> float:
-    return max(0.1, min(0.9, float(score)))
+def clamp(value: float) -> float:
+    return max(0.1, min(0.9, float(value)))
 
 def grade_easy(env) -> float:
     total_jobs = len(env.jobs)
     if total_jobs == 0:
         return 0.1
     assigned = sum(1 for j in env.jobs if j.assigned)
-    raw = assigned / total_jobs
-    return round(0.1 + (raw * 0.8), 6)
+    return round(clamp(assigned / total_jobs), 6)
 
 def grade_medium(env) -> float:
     total_jobs = len(env.jobs)
@@ -19,8 +16,7 @@ def grade_medium(env) -> float:
         1 for j in env.jobs
         if j.assigned and env.time <= j.deadline
     )
-    raw = success / total_jobs
-    return round(0.1 + (raw * 0.8), 6)
+    return round(clamp(success / total_jobs), 6)
 
 def grade_hard(env) -> float:
     total_jobs = len(env.jobs)
@@ -41,7 +37,7 @@ def grade_hard(env) -> float:
     avg_carbon = total_carbon / max(success, 1)
     carbon_score = max(0.0, min(1.0, 1.0 - avg_carbon))
     final_score = (0.6 * completion_score) + (0.4 * carbon_score)
-    return round(0.1 + (final_score * 0.8), 6)
+    return round(clamp(final_score), 6)
 
 GRADERS = {
     "easy":   grade_easy,
@@ -49,6 +45,7 @@ GRADERS = {
     "hard":   grade_hard,
 }
 
-easy = grade_easy
+# Aliases for openenv.yaml
+easy   = grade_easy
 medium = grade_medium
-hard = grade_hard
+hard   = grade_hard
