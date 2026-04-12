@@ -12,17 +12,17 @@ MAX_STEPS = 5
 client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
 def clamp(value: float) -> float:
-    return max(0.15, min(0.85, float(value)))
+    return max(0.2, min(0.8, float(value)))  # ✅ tighter bounds
 
 def log_start(task, env, model):
     print(f"[START] task={task} env={env} model={model}")
 
 def log_step(step, action, reward, done, error):
     error_val = error if error else "null"
-    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error={error_val}")
+    print(f"[STEP] step={step} action={action} reward={reward:.4f} done={str(done).lower()} error={error_val}")
 
 def log_end(success, steps, rewards):
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    rewards_str = ",".join(f"{r:.4f}" for r in rewards)  # ✅ 4 decimal places
     print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}")
 
 def call_llm(client):
