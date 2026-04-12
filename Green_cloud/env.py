@@ -4,7 +4,7 @@ from reward import calculate_reward
 from tasks import TASKS
 
 def clamp(value: float) -> float:
-    return max(0.1, min(0.9, float(value)))
+    return max(0.01, min(0.99, float(value)))
 
 class GreenCloudEnv:
     def __init__(self):
@@ -22,7 +22,6 @@ class GreenCloudEnv:
             task_id = "easy"
         self.current_task_id = task_id
         self.current_task = TASKS[task_id]
-
         self.energy_sources = {
             "solar": EnergySource(name="solar", carbon_intensity=0.1, cost=2.0, availability=0.8),
             "wind":  EnergySource(name="wind",  carbon_intensity=0.2, cost=1.5, availability=0.7),
@@ -43,23 +42,17 @@ class GreenCloudEnv:
     def step(self, action: Action) -> StepResult:
         reward = 0.5
         done = False
-
         job    = next((j for j in self.jobs    if j.id   == action.job_id), None)
         region = next((r for r in self.regions if r.name == action.region),  None)
-
         if job and region and action.action_type == "assign" and not job.assigned:
             job.assigned = True
             job.assigned_region = region.name
             reward = clamp(calculate_reward(job, region, self.energy_sources, self.time))
-
         self.time += 1
-
         if self.time >= self.max_time or all(j.assigned for j in self.jobs):
             done = True
-
         if done:
             reward = clamp(self.current_task["grader"](self))
-
         return StepResult(
             observation=self._get_observation(reward=reward, done=done),
             reward=reward,
