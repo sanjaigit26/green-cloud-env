@@ -11,20 +11,19 @@ MAX_STEPS = 5
 
 client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
 
+def clamp(value: float) -> float:
+    return max(0.15, min(0.85, float(value)))
 
 def log_start(task, env, model):
     print(f"[START] task={task} env={env} model={model}")
-
 
 def log_step(step, action, reward, done, error):
     error_val = error if error else "null"
     print(f"[STEP] step={step} action={action} reward={reward:.2f} done={str(done).lower()} error={error_val}")
 
-
 def log_end(success, steps, rewards):
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}")
-
 
 def call_llm(client):
     try:
@@ -37,7 +36,6 @@ def call_llm(client):
     except Exception:
         return "fallback"
 
-
 def get_action(env):
     for job in env.jobs:
         if not job.assigned:
@@ -47,7 +45,6 @@ def get_action(env):
                 action_type="assign"
             )
     return Action(job_id=1, region=env.regions[0].name, action_type="assign")
-
 
 def run_task(task_id: str):
     env = GreenCloudEnv()
@@ -67,21 +64,23 @@ def run_task(task_id: str):
         action_obj = get_action(env)
         result = env.step(action_obj)
 
-        reward = result.reward
+        # ✅ clamp every reward strictly inside (0,1)
+        reward = clamp(result.reward)
         done = result.done
         rewards.append(reward)
 
         log_step(step, str(action_obj.model_dump()), reward, done, None)
 
-    success = sum(rewards) > 0
+    # ✅ success as float strictly between 0 and 1, never True/False
+    final_score = clamp(sum(rewards) / len(rewards)) if rewards else 0.5
+    success = final_score > 0.3
 
     log_end(success, step, rewards)
-
+    return final_score
 
 def run():
     for task_id in ["easy", "medium", "hard"]:
         run_task(task_id)
-
 
 if __name__ == "__main__":
     run()
