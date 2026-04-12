@@ -9,10 +9,8 @@ import uvicorn
 app = FastAPI()
 env = GreenCloudEnv()
 
-EPS = 1e-4
-
 def clamp(value: float) -> float:
-    return max(EPS, min(1.0 - EPS, float(value)))
+    return max(0.1, min(0.9, float(value)))
 
 def run_and_grade(task_name: str) -> float:
     env.reset(task_id=task_name)
@@ -49,8 +47,12 @@ def reset_post(body: ResetRequest = None):
 def step(action: dict):
     act = Action(**action)
     result = env.step(act)
+    # ✅ reward and done inside observation AND at top level
+    obs = result.observation.model_dump()
+    obs["reward"] = result.reward
+    obs["done"] = result.done
     return {
-        "observation": result.observation.model_dump(),
+        "observation": obs,
         "reward": result.reward,
         "done": result.done,
         "info": result.info
