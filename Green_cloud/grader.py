@@ -21,8 +21,7 @@ def easy(env=None, observation=None, **kwargs) -> float:
         if total_jobs <= 0:
             return 0.5
         assigned = sum(1 for j in jobs if getattr(j, "assigned", False))
-        raw = assigned / total_jobs
-        return _safe(raw)
+        return _safe(assigned / total_jobs)
     except Exception:
         return 0.5
 
@@ -39,8 +38,7 @@ def medium(env=None, observation=None, **kwargs) -> float:
             if getattr(j, "assigned", False)
             and current_time <= getattr(j, "deadline", current_time)
         )
-        raw = success / total_jobs
-        return _safe(raw)
+        return _safe(success / total_jobs)
     except Exception:
         return 0.5
 
@@ -75,4 +73,20 @@ def hard(env=None, observation=None, **kwargs) -> float:
                     continue
                 carbon += getattr(source, "carbon_intensity", 0.0) * float(ratio)
             success_count += 1
-            total_carbon += carb
+            total_carbon += carbon
+        completion_score = _safe(success_count / total_jobs)
+        if success_count == 0:
+            carbon_score = 0.5
+        else:
+            avg_carbon = total_carbon / success_count
+            carbon_score = _safe(1.0 - avg_carbon)
+        weighted = 0.6 * completion_score + 0.4 * carbon_score
+        return _safe(weighted)
+    except Exception:
+        return 0.5
+
+GRADERS = {
+    "easy":   easy,
+    "medium": medium,
+    "hard":   hard,
+}
