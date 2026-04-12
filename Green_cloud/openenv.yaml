@@ -4,7 +4,6 @@ description: >
   A reinforcement learning environment where an AI agent schedules compute jobs
   across multiple regions powered by different energy sources. The agent must
   optimize for carbon emissions, cost efficiency, and job deadlines.
-
 entry_point: env:GreenCloudEnv
 
 observation_space:
