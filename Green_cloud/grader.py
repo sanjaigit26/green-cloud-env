@@ -1,6 +1,4 @@
-# grader.py - complete fixed file
-
-EPS = 0.1  # ✅ meaningful minimum, not near-zero
+EPS = 0.1
 
 def safe_score(score: float) -> float:
     return max(0.1, min(0.9, float(score)))  # strictly inside (0,1) with big margin
