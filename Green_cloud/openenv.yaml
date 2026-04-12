@@ -29,8 +29,8 @@ action_space:
       type: string
 
 reward_range:
-  min: 0.0001
-  max: 0.9999
+  min: 0.5
+  max: 0.5
 
 max_steps: 10
 
