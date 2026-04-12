@@ -1,7 +1,7 @@
 from math import isfinite
 
 def clamp(value: float) -> float:
-    return max(0.15, min(0.85, float(value)))  # ✅ tighter bounds, never 0 or 1
+    return max(0.01, min(0.99, float(value)))
 
 def strict_score(value: float) -> float:
     try:
@@ -17,9 +17,10 @@ def easy(env=None, observation=None, **kwargs) -> float:
     jobs = getattr(obj, "jobs", []) or []
     total_jobs = len(jobs)
     if total_jobs <= 0:
-        return 0.15
+        return 0.5
     assigned = sum(1 for j in jobs if getattr(j, "assigned", False))
-    return round(strict_score(assigned / total_jobs), 6)
+    score = round(strict_score(assigned / total_jobs), 6)
+    return max(0.001, min(0.999, score))
 
 def medium(env=None, observation=None, **kwargs) -> float:
     obj = env if env is not None else observation
@@ -27,13 +28,14 @@ def medium(env=None, observation=None, **kwargs) -> float:
     current_time = getattr(obj, "time", 0)
     total_jobs = len(jobs)
     if total_jobs <= 0:
-        return 0.15
+        return 0.5
     success = sum(
         1 for j in jobs
         if getattr(j, "assigned", False)
         and current_time <= getattr(j, "deadline", current_time)
     )
-    return round(strict_score(success / total_jobs), 6)
+    score = round(strict_score(success / total_jobs), 6)
+    return max(0.001, min(0.999, score))
 
 def hard(env=None, observation=None, **kwargs) -> float:
     obj = env if env is not None else observation
@@ -42,7 +44,7 @@ def hard(env=None, observation=None, **kwargs) -> float:
     energy_sources = getattr(obj, "energy_sources", {}) or {}
     total_jobs = len(jobs)
     if total_jobs <= 0:
-        return 0.15
+        return 0.5
     success_count = 0
     total_carbon = 0.0
     for j in jobs:
@@ -66,16 +68,15 @@ def hard(env=None, observation=None, **kwargs) -> float:
             carbon += getattr(source, "carbon_intensity", 0.0) * float(ratio)
         success_count += 1
         total_carbon += carbon
-
     completion_score = strict_score(success_count / total_jobs)
     if success_count == 0:
-        carbon_score = 0.15
+        carbon_score = 0.5
     else:
         avg_carbon = total_carbon / success_count
         carbon_score = strict_score(1.0 - avg_carbon)
-
     weighted = 0.6 * completion_score + 0.4 * carbon_score
-    return round(strict_score(weighted), 6)
+    score = round(strict_score(weighted), 6)
+    return max(0.001, min(0.999, score))
 
 GRADERS = {
     "easy":   easy,
