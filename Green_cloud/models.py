@@ -24,6 +24,8 @@ class Observation(BaseModel):
     jobs: List[Job]
     regions: List[Region]
     energy_sources: Dict[str, EnergySource]
+    reward: float = 0.5        # ✅ always present, never null
+    done: bool = False
 
 class Action(BaseModel):
     job_id: int
