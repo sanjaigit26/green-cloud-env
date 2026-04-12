@@ -7,9 +7,9 @@ def _safe(value: float) -> float:
         return 0.5
     if not isfinite(x):
         return 0.5
-    if x <= 0.0:
+    if x <= 0:
         return 0.21
-    if x >= 1.0:
+    if x >= 1:
         return 0.79
     if x < 0.21:
         return 0.21
@@ -85,7 +85,7 @@ def hard(env=None, observation=None, **kwargs) -> float:
             carbon = 0.5
         else:
             avg_carbon = total_carbon / success_count
-            carbon = _safe(0.21 + (1.0 - avg_carbon) * 0.58)
+            carbon = _safe(0.21 + (1 - avg_carbon) * 0.58)
         return _safe(0.6 * completion + 0.4 * carbon)
     except Exception:
         return 0.5
