@@ -12,7 +12,7 @@ MAX_STEPS = 5
 client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
 def clamp(value: float) -> float:
-    return max(0.2, min(0.8, float(value)))  # ✅ tighter bounds
+    return max(0.21, min(0.79, float(value)))
 
 def log_start(task, env, model):
     print(f"[START] task={task} env={env} model={model}")
