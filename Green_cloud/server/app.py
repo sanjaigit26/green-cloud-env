@@ -9,9 +9,6 @@ import uvicorn
 app = FastAPI()
 env = GreenCloudEnv()
 
-def clamp(value: float) -> float:
-    return max(0.1, min(0.9, float(value)))
-
 def run_and_grade(task_name: str) -> float:
     env.reset(task_id=task_name)
     for job in env.jobs:
@@ -23,7 +20,8 @@ def run_and_grade(task_name: str) -> float:
             )
         )
         env.step(Action(job_id=job.id, region=best_region.name, action_type="assign"))
-    return clamp(GRADERS[task_name](env))
+    score = GRADERS[task_name](env)
+    return max(0.001, min(0.999, float(score)))
 
 class ResetRequest(BaseModel):
     task_id: Optional[str] = "easy"
@@ -47,7 +45,6 @@ def reset_post(body: ResetRequest = None):
 def step(action: dict):
     act = Action(**action)
     result = env.step(act)
-    # ✅ reward and done inside observation AND at top level
     obs = result.observation.model_dump()
     obs["reward"] = result.reward
     obs["done"] = result.done
@@ -61,11 +58,12 @@ def step(action: dict):
 @app.get("/grade")
 @app.post("/grade")
 def grade():
-    return {
+    scores = {
         "easy":   run_and_grade("easy"),
         "medium": run_and_grade("medium"),
         "hard":   run_and_grade("hard")
     }
+    return {k: max(0.001, min(0.999, float(v))) for k, v in scores.items()}
 
 def main():
     uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
